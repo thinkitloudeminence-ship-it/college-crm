@@ -1,0 +1,10 @@
+node_modules/
+.cache/
+dist/
+build/
+.env
+*.log
+frontend/node_modules/
+client-web/node_modules/
+client-mobile/node_modules/
+

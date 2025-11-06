@@ -17,8 +17,8 @@ import Login from './pages/auth/Login';
 // Admin Pages
 import AdminDashboard from './pages/admin/Dashboard';
 import EmployeeManagement from './pages/admin/EmployeeManagement';
-import LeadManagement from './pages/admin/LeadManagement';
-
+// import LeadManagement from './pages/admin/LeadManagement';
+import LeadManagement from './components/admin/LeadManagement';
 // Telecaller Pages
 import TelecallerDashboard from './pages/telecaller/Dashboard';
 import MyLeads from './pages/telecaller/MyLeads';

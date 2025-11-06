@@ -1,144 +1,117 @@
-// import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-// import authService from '../../services/authService'
 
-// // Get user from localStorage
-// const user = JSON.parse(localStorage.getItem('user'))
+// import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+// import axios from 'axios';
 
-// const initialState = {
-//   user: user ? user : null,
-//   isError: false,
-//   isSuccess: false,
-//   isLoading: false,
-//   message: '',
-// }
+// const API_URL = 'http://localhost:5000/api';
 
-// // Login user
-// export const login = createAsyncThunk(
+// export const loginUser = createAsyncThunk(
 //   'auth/login',
-//   async ({ email, password, userType }, thunkAPI) => {
+//   async ({ email, password }, { rejectWithValue }) => {
 //     try {
-//       return await authService.login(email, password, userType)
+//       const response = await axios.post(`${API_URL}/auth/login`, {
+//         email,
+//         password
+//       });
+//       return response.data;
 //     } catch (error) {
-//       const message =
-//         (error.response &&
-//           error.response.data &&
-//           error.response.data.message) ||
-//         error.message ||
-//         error.toString()
-//       return thunkAPI.rejectWithValue(message)
+//       return rejectWithValue(
+//         error.response?.data?.message || 'Login failed'
+//       );
 //     }
 //   }
-// )
+// );
 
-// // Logout user
-// export const logout = createAsyncThunk('auth/logout', async () => {
-//   await authService.logout()
-// })
-
-// // Check authentication
-// export const checkAuth = createAsyncThunk('auth/check', async (_, thunkAPI) => {
-//   try {
-//     return await authService.checkAuth()
-//   } catch (error) {
-//     return thunkAPI.rejectWithValue('Authentication check failed')
-//   }
-// })
-
-// // Change password
-// export const changePassword = createAsyncThunk(
-//   'auth/changePassword',
-//   async ({ currentPassword, newPassword }, thunkAPI) => {
+// export const checkAuth = createAsyncThunk(
+//   'auth/checkAuth',
+//   async (_, { rejectWithValue }) => {
 //     try {
-//       return await authService.changePassword(currentPassword, newPassword)
+//       const token = localStorage.getItem('token');
+//       if (!token) {
+//         throw new Error('No token found');
+//       }
+
+//       const response = await axios.get(`${API_URL}/auth/me`, {
+//         headers: {
+//           Authorization: `Bearer ${token}`
+//         }
+//       });
+//       return response.data;
 //     } catch (error) {
-//       const message =
-//         (error.response &&
-//           error.response.data &&
-//           error.response.data.message) ||
-//         error.message ||
-//         error.toString()
-//       return thunkAPI.rejectWithValue(message)
+//       localStorage.removeItem('token');
+//       return rejectWithValue('Authentication failed');
 //     }
 //   }
-// )
+// );
 
-// export const authSlice = createSlice({
+// const authSlice = createSlice({
 //   name: 'auth',
-//   initialState,
+//   initialState: {
+//     user: null,
+//     token: localStorage.getItem('token'),
+//     isLoading: false,
+//     isAuthenticated: false,
+//     error: null
+//   },
 //   reducers: {
-//     reset: (state) => {
-//       state.isLoading = false
-//       state.isSuccess = false
-//       state.isError = false
-//       state.message = ''
+//     logout: (state) => {
+//       state.user = null;
+//       state.token = null;
+//       state.isAuthenticated = false;
+//       localStorage.removeItem('token');
 //     },
 //     clearError: (state) => {
-//       state.isError = false
-//       state.message = ''
-//     },
+//       state.error = null;
+//     }
 //   },
 //   extraReducers: (builder) => {
 //     builder
-//       // Login
-//       .addCase(login.pending, (state) => {
-//         state.isLoading = true
+//       .addCase(loginUser.pending, (state) => {
+//         state.isLoading = true;
+//         state.error = null;
 //       })
-//       .addCase(login.fulfilled, (state, action) => {
-//         state.isLoading = false
-//         state.isSuccess = true
-//         state.user = action.payload.user
-//         state.message = 'Login successful'
+//       .addCase(loginUser.fulfilled, (state, action) => {
+//         state.isLoading = false;
+//         state.user = action.payload.user;
+//         state.token = action.payload.token;
+//         state.isAuthenticated = true;
+//         state.error = null;
+//         localStorage.setItem('token', action.payload.token);
 //       })
-//       .addCase(login.rejected, (state, action) => {
-//         state.isLoading = false
-//         state.isError = true
-//         state.message = action.payload
-//         state.user = null
+//       .addCase(loginUser.rejected, (state, action) => {
+//         state.isLoading = false;
+//         state.error = action.payload;
+//         state.isAuthenticated = false;
 //       })
-//       // Logout
-//       .addCase(logout.fulfilled, (state) => {
-//         state.user = null
-//         state.isSuccess = false
-//       })
-//       // Check Auth
 //       .addCase(checkAuth.pending, (state) => {
-//         state.isLoading = true
+//         state.isLoading = true;
 //       })
 //       .addCase(checkAuth.fulfilled, (state, action) => {
-//         state.isLoading = false
-//         state.user = action.payload.user
+//         state.isLoading = false;
+//         state.user = action.payload.data;
+//         state.isAuthenticated = true;
+//         state.error = null;
 //       })
 //       .addCase(checkAuth.rejected, (state) => {
-//         state.isLoading = false
-//         state.user = null
-//         localStorage.removeItem('user')
-//       })
-//       // Change Password
-//       .addCase(changePassword.pending, (state) => {
-//         state.isLoading = true
-//       })
-//       .addCase(changePassword.fulfilled, (state, action) => {
-//         state.isLoading = false
-//         state.isSuccess = true
-//         state.message = action.payload.message
-//       })
-//       .addCase(changePassword.rejected, (state, action) => {
-//         state.isLoading = false
-//         state.isError = true
-//         state.message = action.payload
-//       })
-//   },
-// })
+//         state.isLoading = false;
+//         state.user = null;
+//         state.token = null;
+//         state.isAuthenticated = false;
+//         state.error = null;
+//       });
+//   }
+// });
 
-// export const { reset, clearError } = authSlice.actions
-// export default authSlice.reducer
-
+// export const { logout, clearError } = authSlice.actions;
+// export default authSlice.reducer;
 
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api';
+// Production aur Development ke liye different API URLs
+const API_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://college-crm.onrender.com/api' 
+  : 'http://localhost:5000/api';
 
 export const loginUser = createAsyncThunk(
   'auth/login',
